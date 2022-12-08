@@ -1,0 +1,339 @@
+---
+title: "Data Science as a Field - Final Project"
+author: "Shivam Sawhney"
+output: html
+---
+
+## Introduction
+
+Data Science is a domain which is growing rapidly at an exponential rate. The amount of data that the world is producing today is immense. With advancements in technology, we now have the capability and knowledge to extract sense out of huge amounts of data, discover patterns, uncover insights and what not.
+
+There are a lot of application areas in which Data Science is successfully being applied. I have chosen to focus my attention onto **SPORTS**.
+
+*Why?*
+
+Well, mainly because I am a huge sports enthusiast and also, I have been really wanting to work on a data-set which was related to sports.
+
+## Dataset - Brief Summary
+
+It was very difficult to get a single collated dataset which contained all the attributes and features which I wanted to analyze. Also, it was difficult to make a choice, as to which exact sport to be chosen to work with.
+
+Nevertheless, I picked up [Soccer]{.underline} - the dataset is actually a combination of 15 csv files, having on an average 7-9 variables. The data is spread across 5 years - 2015 to 2020 and consists of 3 main aspects:
+
+-   Away Attendance records
+
+-   Home Attendance records
+
+-   Player Statistics
+
+*Note: The said dataset consists data from Europe's top leagues namely - Premier League (England), La Liga (Spain), Serie A (Italy), Bundesliga (Germany), French Ligue 1, Scottish Premiership and Eredivisie (Netherlands)*
+
+[Data Source](https://www.kaggle.com/datasets/cclayford/statbunker-football-stats)
+
+## Question of Interest?
+
+As part of the analysis, I will look at each of the leagues and find out their top scorers over the 5 seasons.
+
+I will be plotting results and looking at data trends and insights as well.
+
+Lets begin by firstly importing all the required libraries that will be needed for my analysis
+
+```{r Importing Libraries, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(Hmisc)
+library(gridExtra)
+
+```
+
+Next up, I will load the dataset and then collate them together
+
+```{r Loading the Dataset}
+
+a1 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Away%20attendance%202015-16.csv")
+a2 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Away%20attendance%202016-17.csv")
+a3 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Away%20attendance%202017-18.csv")
+a4 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Away%20attendance%202018-19.csv")
+a5 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Away%20attendance%202019-20.csv")
+
+h1 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Home%20attendance%202015-16.csv")
+h2 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Home%20attendance%202016-17.csv")
+h3 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Home%20attendance%202017-18.csv")
+h4 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Home%20attendance%202018-19.csv")
+h5 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Home%20attendance%202019-20.csv")
+
+s1 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Player%20Stats%202015-16.csv")
+s2 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Player%20Stats%202016-17.csv")
+s3 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Player%20Stats%202017-18.csv")
+s4 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Player%20Stats%202018-19.csv")
+s5 <- read.csv("https://raw.githubusercontent.com/shivamsawhney17/Data-Science-as-a-Field/main/Player%20Stats%202019-20.csv")
+
+
+```
+
+```{r Combining the dataset}
+
+Away_att <- rbind(a1,a2,a3,a4,a5)
+Home_att <- rbind(h1,h2,h3,h4,h5)
+ply_stat <- rbind(s1,s2,s3,s4,s5)
+
+```
+
+## Data Cleaning and Pre-processing
+
+The next lines of code address the problems which I faced, when I looked closely onto the dataset. Mismatching labels, improper column names, null values, dropping unnecessary columns, making sure that the data columns are of the correct data type - all this has been addressed as part of making the data *TIDY*
+
+```{r Cleaning Away Attendance Dataset}
+
+Away_att <- plyr::rename(Away_att, c("Avg.Away.Attendance"="Avg Away Attendance", "Total.Away.Attendance"="Total Away Attendance", "Highest.Away.Attendance"="Highest Away Attendance", "Lowest.Away.Attendance"="Lowest Away Attendance"))
+
+Away_att <- select(Away_att, -c("KEY"))
+
+Away_att$`Avg Away Attendance` <- str_remove(Away_att$`Avg Away Attendance`, ",")
+Away_att$`Total Away Attendance` <-str_remove(Away_att$`Total Away Attendance`, ",")
+Away_att$`Highest Away Attendance` <- str_remove(Away_att$`Highest Away Attendance`, ",")
+Away_att$`Lowest Away Attendance` <- str_remove(Away_att$`Lowest Away Attendance`, ",")
+
+Away_att$`Avg Away Attendance` <-as.integer(Away_att$`Avg Away Attendance`)
+Away_att$`Total Away Attendance` <-as.integer(Away_att$`Total Away Attendance`)
+Away_att$`Highest Away Attendance` <-as.integer(Away_att$`Highest Away Attendance`)
+Away_att$`Lowest Away Attendance` <-as.integer(Away_att$`Lowest Away Attendance`)
+
+```
+
+Lets check for null values
+
+```{r Away Attendance - EDA}
+
+sapply(Away_att, function(x) sum(is.na(x)))
+
+```
+
+Checking for data types of the dataset.
+
+```{r Away Attendance - EDA 2}
+
+str(Away_att)
+
+```
+
+Cleaning the Home Attendance Dataset next.
+
+```{r Cleaning Home Attendance Dataset}
+
+Home_att <- plyr::rename(Home_att, c("Avg.Home.Attendance"="Avg Home Attendance", "Total.Home.Attendance"="Total Home Attendance", "Highest.Home.Attendance"="Highest Home Attendance", "Lowest.Home.Attendance"="Lowest Home Attendance"))
+
+Home_att <- select(Home_att, -c("KEY"))
+
+Home_att$`Avg Home Attendance` <- str_remove_all(Home_att$`Avg Home Attendance`, ",")
+Home_att$`Total Home Attendance` <-str_remove_all(Home_att$`Total Home Attendance`, ",")
+Home_att$`Highest Home Attendance` <- str_remove_all(Home_att$`Highest Home Attendance`, ",")
+Home_att$`Lowest Home Attendance` <- str_remove(Home_att$`Lowest Home Attendance`, ",")
+
+Home_att$`Avg Home Attendance` <-as.integer(Home_att$`Avg Home Attendance`)
+Home_att$`Total Home Attendance` <-as.integer(Home_att$`Total Home Attendance`)
+Home_att$`Highest Home Attendance` <-as.integer(Home_att$`Highest Home Attendance`)
+Home_att$`Lowest Home Attendance` <-as.integer(Home_att$`Lowest Home Attendance`)
+
+```
+
+Checking null values
+
+```{r Home Attendance - EDA}
+
+sapply(Home_att, function(x) sum(is.na(x)))
+
+```
+
+Checking data types of columns
+
+```{r Home Attendance - EDA 2}
+
+str(Home_att)
+
+```
+
+Lastly, I will clean the player statistics dataset
+
+```{r Cleaning Player Stats Dataset}
+
+ply_stat <- select(ply_stat, c("League", "Team", "Season", "Player", "Position", "Appearances", "Goals"))
+
+ply_stat <- drop_na(ply_stat)
+
+ply_stat$Appearances <- str_replace_all(ply_stat$Appearances,"No data found", "0")
+ply_stat$Appearances <- str_replace_all(ply_stat$Appearances,"^$", "0")
+ply_stat$Goals <- str_replace_all(ply_stat$Goals, "No data found", "0")
+ply_stat$Goals <- str_replace_all(ply_stat$Goals, "No scorers found", "0")
+ply_stat$Goals <- as.integer(ply_stat$Goals)
+ply_stat$Appearances <- as.integer(ply_stat$Appearances)
+
+```
+
+Checking for null values
+
+```{r Player Stats - EDA}
+
+sapply(ply_stat, function(x) sum(is.na(ply_stat)))
+
+```
+
+Checking data types of columns
+
+```{r Player Stats - EDA 2}
+
+str(ply_stat)
+
+```
+
+## Visualizations and Analysis
+
+This section highlights some important trends and insights which I could uncover while performing EDA on the dataset.
+
+```{r Away Attendance Visualization}
+
+Away_att %>% filter(League=="Premier League") %>% ggplot(aes(`Highest Away Attendance`,Team)) + geom_boxplot(outlier.colour = "magenta", color="Brown", fill="Orange") + ggtitle("Premier League Teams Highest Away Attendance") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+The above plot showcases the Away Attendance trends for Teams in the Premier League. As can be seen, the plot is dense around the 75,000 mark with most of the teams having this number as their highest away attendance across seasons. The observations seen as *pink dots* in the plot represent outliers.
+
+```{r Home Attendance Visualization}
+
+Home_att %>% ggplot(aes(League,`Highest Home Attendance`, col=League)) + geom_col() + ggtitle("League Wise Highest Home Attendance") + theme(plot.title = element_text(hjust = 0.5),axis.text.x=element_blank())
+
+```
+
+The above plot displays the League wise highest home attendance spread across the 5 seasons. German football seems to be leading the way, with Italy not far behind.
+
+Next, making use of the player statistics available, I determined, which players have been the top scorers in all the leagues, season-wise
+
+Staring of with La Liga (Spain)
+
+```{r Top Goal Scorers in La Liga}
+
+ply_stat %>% filter(League=="La Liga", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="La Liga", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="La Liga", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="La Liga", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="La Liga", !Player=="", Season=="2019/20") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+Next, Premier League (England)
+
+```{r Top Goal Scorers in Premier League}
+
+ply_stat %>% filter(League=="Premier League", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Premier League", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Premier League", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Premier League", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Premier League", !Player=="", Season=="2019/20") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+Bundesliga (Germany)
+
+```{r Top Goal Scorers in Bundesliga}
+
+ply_stat %>% filter(League=="Bundesliga", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Bundesliga", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Bundesliga", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Bundesliga", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Bundesliga", !Player=="", Season=="2019/20") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+Scottish Premiership
+
+```{r Top Goal Scorers in Scottish Premiership}
+
+ply_stat %>% filter(League=="Scottish Premiership", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Scottish Premiership", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Scottish Premiership", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Scottish Premiership", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Scottish Premiership", !Player=="", Season=="2019/20") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+French Ligue 1
+
+```{r Top Goal Scorers in French Ligue 1}
+
+ply_stat %>% filter(League=="French Ligue 1", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="French Ligue 1", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="French Ligue 1", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="French Ligue 1", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="French Ligue 1", !Player=="", Season=="2019/20") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+Serie A (Italy)
+
+```{r Top Goal Scorers in Serie A}
+
+ply_stat %>% filter(League=="Serie A", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Serie A", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Serie A", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Serie A", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Serie A", !Player=="", Season=="2019/20") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+Eredivisie (Netherlands)
+
+```{r Top Goal Scorers in Eredivisie}
+
+ply_stat %>% filter(League=="Eredivisie", !Player=="", Season=="2015/16") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Eredivisie", !Player=="", Season=="2016/17") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Eredivisie", !Player=="", Season=="2017/18") %>% arrange(desc(Goals)) %>% group_by(Season)
+ply_stat %>% filter(League=="Eredivisie", !Player=="", Season=="2018/19") %>% arrange(desc(Goals)) %>% group_by(Season)
+
+```
+
+The below last graphs, are scoring trends of an individual player, across the 5 seasons.
+
+```{r Player Scoring Trends}
+
+p1 <- ply_stat %>% filter(Player=="Harry Kane") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="purple") + geom_point(size=4.5, col="dark blue") + ggtitle("Harry Kane Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+p2 <- ply_stat %>% filter(Player=="Mohamed Salah") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="red") + geom_point(size=4.5, col="black") + ggtitle("Mo Salah Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+p3 <- ply_stat %>% filter(Player=="Sadio Mane") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="red") + geom_point(size=4.5, col="black") + ggtitle("Sadio Mane Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+p4 <- ply_stat %>% filter(Player=="Jamie Vardy") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="blue") + geom_point(size=4.5, col="white") + ggtitle("Jamie Vardy Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+grid.arrange(p1, p2,p3,p4, ncol = 2)
+
+
+```
+
+```{r Player Scoring Trends 2}
+
+p5 <- ply_stat %>% filter(Player=="Lionel Messi") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="grey") + geom_point(size=4.5, col="light blue") + ggtitle("Leo Messi Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+p6 <- ply_stat %>% filter(Player=="Cristiano Ronaldo") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="red") + geom_point(size=4.5, col=" dark green") + ggtitle("Cristiano Ronaldo Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+p7 <- ply_stat %>% filter(Player=="Robert Lewandowski") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="red") + geom_point(size=4.5, col="white") + ggtitle("Robert Lewandowski Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+p8 <- ply_stat %>% filter(Player=="Karim Benzema") %>% ggplot(aes(Season, Goals, group=1)) + geom_line(col="blue") + geom_point(size=4.5, col="black") + ggtitle("Karim Benzema Goal Scoring trends") + theme(plot.title = element_text(hjust = 0.5))
+
+grid.arrange(p5,p6,p7,p8,ncol=2)
+```
+
+It can be seen that the top scorers in each leagues have been consistently giving in the numbers. Goal count of 25+ can be considered as a successful season for a forward at work!
+
+## Conclusion
+
+This project and research work was very helpful for me, in getting to know, how Data Science is being applied in the real word.
+
+Upon analyzing the dataset, I had this pre-conceived notion in mind (Bias), that England is probably the most competitive league when it comes to soccer. With this, I felt that this data-set which I was analyzing was probably going to support my hypothesis.
+
+I can say this with certainty that my notion has been disproved. Apart from the French league - which is basically a one man race - all the other leagues have shown immense competition and challenge among one another. Teams have risen to the occasion and done wonders (Leicester City 2015/16)
+
+## Session Info
+
+```{r Session Info}
+sessionInfo()
+```
